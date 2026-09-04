@@ -47,16 +47,17 @@ def ui(
 
     console.print("\n")
     console.print(Panel(
-        f"[bold green]🚀 KatanaQuant Trading Dashboard is Online![/bold green]\n\n"
-        f"👉 [bold yellow]Click or open the link below in your browser:[/bold yellow]\n"
-        f"🔗 [bold cyan underline]http://{actual_host}:{actual_port}[/bold cyan underline]\n"
-        f"🔗 [bold cyan underline]http://localhost:{actual_port}[/bold cyan underline]\n\n"
-        f"[dim]Multi-Agent AI Hub • Deterministic Risk Gate • Real-Time Trading Engine[/dim]",
+        f"[bold green]=== KatanaQuant Trading Dashboard Online ===[/bold green]\n\n"
+        f"[bold yellow]Open the link below in your browser:[/bold yellow]\n"
+        f"[bold cyan underline]http://{actual_host}:{actual_port}[/bold cyan underline]\n"
+        f"[bold cyan underline]http://localhost:{actual_port}[/bold cyan underline]\n\n"
+        f"[dim]Multi-Agent AI Hub | Deterministic Risk Gate | Real-Time Trading Engine[/dim]",
         title="[bold white]Localhost Dashboard Server[/bold white]",
         border_style="bright_blue",
         expand=False
     ))
     console.print("\n")
+
     uvicorn.run("src.web.app:app", host=actual_host, port=actual_port, reload=False)
 
 

@@ -24,8 +24,15 @@ from src.orchestrator.pipeline import TradingOrchestrator
 from src.execution.dry_run_broker import DryRunBroker
 from src.execution.alpaca_broker import AlpacaBrokerClient
 
-app = typer.Typer(help="Automated Multi-Agent Stock Trading System")
+app = typer.Typer(help="KatanaQuant - Automated Multi-Agent Stock Trading System", invoke_without_command=True)
 console = Console()
+
+
+@app.callback()
+def main_callback(ctx: typer.Context):
+    """If no subcommand is passed, default to launching the Web UI Dashboard."""
+    if ctx.invoked_subcommand is None:
+        ui()
 
 
 @app.command()
@@ -35,13 +42,20 @@ def ui(
 ):
     """Launch the real-time visual Web Trading Dashboard."""
     import uvicorn
+    console.print("\n")
     console.print(Panel(
-        f"[bold green]Launching Antigravity Trading Dashboard[/bold green]\n"
-        f"URL: [bold cyan]http://{host}:{port}[/bold cyan]\n"
-        f"Multi-Agent AI Hub • Deterministic Risk Gate • Interactive Backtester",
+        f"[bold green]🚀 KatanaQuant Trading Dashboard is Online![/bold green]\n\n"
+        f"👉 [bold yellow]Click or open the link below in your browser:[/bold yellow]\n"
+        f"🔗 [bold cyan underline]http://{host}:{port}[/bold cyan underline]\n"
+        f"🔗 [bold cyan underline]http://localhost:{port}[/bold cyan underline]\n\n"
+        f"[dim]Multi-Agent AI Hub • Deterministic Risk Gate • Real-Time Trading Engine[/dim]",
+        title="[bold white]Localhost Dashboard Server[/bold white]",
+        border_style="bright_blue",
         expand=False
     ))
+    console.print("\n")
     uvicorn.run("src.web.app:app", host=host, port=port, reload=False)
+
 
 
 @app.command()

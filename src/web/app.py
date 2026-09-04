@@ -648,17 +648,22 @@ async def submit_manual_order(req: ManualOrderRequest):
     )
 
     if decision.approved:
-        order = await state.broker.submit_order(trade, decision)
-        state.reconciler.record_trade_fill(
-            symbol=req.symbol,
-            side=side_enum,
-            quantity=decision.allowed_quantity,
-            price=req.price,
-            order_id=order.order_id
-        )
-        return {"status": "FILLED", "order_id": order.order_id, "allowed_quantity": decision.allowed_quantity}
+        try:
+            order = await state.broker.submit_order(trade, decision)
+            state.reconciler.record_trade_fill(
+                symbol=req.symbol,
+                side=side_enum,
+                quantity=decision.allowed_quantity,
+                price=req.price,
+                order_id=order.order_id
+            )
+            return {"status": "FILLED", "order_id": order.order_id, "allowed_quantity": decision.allowed_quantity}
+        except Exception as e:
+            logger.error(f"Manual order submission broker error: {e}")
+            return {"status": "REJECTED_BY_BROKER", "reason": str(e)}
     else:
         return {"status": "REJECTED_BY_RISK_GATE", "reasons": decision.rejection_reasons, "violations": decision.rule_violations}
+
 
 
 class ClosePositionRequest(BaseModel):

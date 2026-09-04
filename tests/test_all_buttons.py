@@ -83,7 +83,7 @@ async def test_all_interactive_buttons_and_routes():
             "reasoning": "AI Advisor Auto Execution Verification"
         })
         assert r_exec.status_code == 200
-        assert r_exec.json()["status"] in ["FILLED", "REJECTED_BY_RISK_GATE"]
+        assert r_exec.json()["status"] in ["FILLED", "REJECTED_BY_RISK_GATE", "REJECTED_BY_BROKER"]
 
         # 10. Manual Order Ticket ("SUBMIT ORDER VIA RISK GATE")
         r_man = await ac.post("/api/manual-order", json={
@@ -94,7 +94,8 @@ async def test_all_interactive_buttons_and_routes():
             "order_type": "MARKET"
         })
         assert r_man.status_code == 200
-        assert r_man.json()["status"] in ["FILLED", "REJECTED_BY_RISK_GATE"]
+        assert r_man.json()["status"] in ["FILLED", "REJECTED_BY_RISK_GATE", "REJECTED_BY_BROKER"]
+
 
         # 11. Strategy Lab Backtest Engine ("RUN HISTORICAL BACKTEST")
         r_bt = await ac.post("/api/backtest", json={

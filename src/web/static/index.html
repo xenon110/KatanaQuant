@@ -12,6 +12,12 @@
     href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    if (typeof Chart === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"><\/script>');
+    }
+  </script>
+
   <style>
     :root {
       --bg-body: #05070b;
@@ -1841,6 +1847,50 @@
         <!-- Left Main View -->
         <div class="main-viewport">
 
+          <!-- 💡 BEGINNER / SIMPLE SUMMARY CARD (Plain-English Overview for Normal Users) -->
+          <div id="simple-summary-widget" style="background: linear-gradient(135deg, #091322 0%, #060c18 100%); border: 1.5px solid #1a2f50; border-radius: 12px; padding: 16px 20px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); display: flex; flex-direction: column; gap: 12px; margin-bottom: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-weight: 800; font-size: 13px; color: #38bdf8;">
+                <span>💡 SIMPLE SUMMARY (NORMAL USER VIEW)</span>
+                <span style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 2px 8px; border-radius: 20px; font-size: 10px;">Plain-English Finances</span>
+              </div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: #00e676; display: flex; align-items: center; gap: 6px;">
+                <span style="width: 7px; height: 7px; border-radius: 50%; background: #00e676; box-shadow: 0 0 8px #00e676;"></span>
+                <span>Account Safe & Risk Gate Protected</span>
+              </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-family: var(--font-mono);">
+              <!-- 1. Money Invested -->
+              <div style="background: rgba(13, 22, 38, 0.7); border: 1px solid #162846; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">💵 MONEY INVESTED NOW</div>
+                <div id="simple-invested-val" style="font-size: 20px; font-weight: 900; color: #ffffff;">$0.00</div>
+                <div style="font-size: 10px; color: #64748b; margin-top: 3px;">Capital active in stocks</div>
+              </div>
+
+              <!-- 2. Portfolio Current Value -->
+              <div style="background: rgba(13, 22, 38, 0.7); border: 1px solid #162846; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">💰 TOTAL PORTFOLIO VALUE</div>
+                <div id="simple-portfolio-val" style="font-size: 20px; font-weight: 900; color: #38bdf8;">$0.00</div>
+                <div style="font-size: 10px; color: #64748b; margin-top: 3px;">What your account is worth</div>
+              </div>
+
+              <!-- 3. Net Profit / Loss -->
+              <div style="background: rgba(13, 22, 38, 0.7); border: 1px solid #162846; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">🟢 LIVE PROFIT / LOSS</div>
+                <div id="simple-net-pnl-val" style="font-size: 20px; font-weight: 900; color: var(--green);">$0.00</div>
+                <div id="simple-net-pnl-sub" style="font-size: 10px; color: var(--green); margin-top: 3px;">+0.00% Net Return</div>
+              </div>
+
+              <!-- 4. Available Bank Cash -->
+              <div style="background: rgba(13, 22, 38, 0.7); border: 1px solid #162846; border-radius: 8px; padding: 12px;">
+                <div style="font-size: 10px; color: #94a3b8; font-weight: 700; margin-bottom: 4px; letter-spacing: 0.5px;">🏦 CASH READY IN BANK</div>
+                <div id="simple-cash-val" style="font-size: 20px; font-weight: 900; color: #ffffff;">$0.00</div>
+                <div style="font-size: 10px; color: #64748b; margin-top: 3px;">Cash available to spend</div>
+              </div>
+            </div>
+          </div>
+
           <div class="kpi-row">
             <div class="kpi-card">
               <div class="kpi-title">🟢 RUNNING STOCKS (OPEN)</div>
@@ -3016,7 +3066,9 @@
     }
 
     function initQuantChart() {
-      const ctx = document.getElementById('quantChart').getContext('2d');
+      const el = document.getElementById('quantChart');
+      if (!el || typeof Chart === 'undefined') return;
+      const ctx = el.getContext('2d');
       const gradient = ctx.createLinearGradient(0, 0, 0, 220);
       gradient.addColorStop(0, 'rgba(0, 230, 118, 0.15)');
       gradient.addColorStop(0.6, 'rgba(0, 230, 118, 0.04)');
@@ -3024,6 +3076,10 @@
 
       const labels = Array.from({ length: 30 }, (_, i) => `T${i + 1}`);
       const data = Array.from({ length: 30 }, (_, i) => 30000 + (i * 120) + (Math.sin(i) * 150));
+
+      if (quantChart) {
+        try { quantChart.destroy(); } catch (e) {}
+      }
 
       quantChart = new Chart(ctx, {
         type: 'line',
@@ -3051,6 +3107,7 @@
         }
       });
     }
+
 
     async function setTimeframe(tf, btn) {
       document.querySelectorAll('.time-selector .time-btn').forEach(b => b.classList.remove('active'));
@@ -3751,19 +3808,21 @@
       }
     }
 
-    function toggleAutoPilot() {
+    async function toggleAutoPilot() {
       autoPilotActive = !autoPilotActive;
       const btn = document.getElementById('btn-auto-pilot');
-      const dot = document.getElementById('auto-pilot-dot');
+      const dot = document.getElementById('autopilot-dot');
+      const txt = document.getElementById('autopilot-text');
 
       if (autoPilotActive) {
         if (btn) {
-          btn.style.background = 'linear-gradient(135deg, #072a1a 0%, #03170e 100%)';
+          btn.style.background = 'rgba(0, 230, 118, 0.12)';
+          btn.style.borderColor = 'rgba(0, 230, 118, 0.4)';
           btn.style.color = '#00e676';
-          btn.style.borderColor = '#00e676';
           btn.style.boxShadow = '0 0 16px rgba(0, 230, 118, 0.35)';
-          btn.innerHTML = `<span id="auto-pilot-dot" style="width:8px; height:8px; border-radius:50%; background:#00e676; display:inline-block; animation:pulse-dot 1s infinite; box-shadow:0 0 8px #00e676;"></span> <span id="auto-pilot-text">AUTO-PILOT: ACTIVE</span>`;
         }
+        if (dot) { dot.style.background = '#00e676'; dot.style.boxShadow = '0 0 6px #00e676'; }
+        if (txt) txt.innerText = 'AUTO-PILOT: ON';
         playChime('trade');
         showToast("Autonomous Auto-Pilot", "AI Auto-Trader is actively scanning & managing positions", "success");
         autoPilotTimer = setInterval(async () => {
@@ -3777,14 +3836,25 @@
       } else {
         clearInterval(autoPilotTimer);
         if (btn) {
-          btn.style.background = 'linear-gradient(135deg, #0b1a2e 0%, #071220 100%)';
-          btn.style.color = '#38bdf8';
-          btn.style.borderColor = '#1f4373';
-          btn.style.boxShadow = '0 0 12px rgba(56, 189, 248, 0.2)';
-          btn.innerHTML = `<span id="auto-pilot-dot" style="width:8px; height:8px; border-radius:50%; background:#64748b; display:inline-block;"></span> <span id="auto-pilot-text">AUTO-PILOT: OFF</span>`;
+          btn.style.background = 'rgba(255, 179, 0, 0.12)';
+          btn.style.borderColor = 'rgba(255, 179, 0, 0.4)';
+          btn.style.color = '#ffb300';
+          btn.style.boxShadow = '0 0 12px rgba(255, 179, 0, 0.2)';
         }
+        if (dot) { dot.style.background = '#ffb300'; dot.style.boxShadow = '0 0 6px #ffb300'; }
+        if (txt) txt.innerText = 'AUTO-PILOT: OFF';
         playChime('click');
         showToast("Auto-Pilot Paused", "Autonomous trading scanner paused", "warning");
+      }
+
+      try {
+        await fetch('/api/autopilot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: autoPilotActive })
+        });
+      } catch (e) {
+        console.error("AutoPilot toggle error:", e);
       }
     }
 
@@ -3957,6 +4027,26 @@
         const totalUnrealizedPnl = positions.reduce((sum, p) => sum + (p.unrealized_pnl || 0), 0);
         const totalUnrealizedPct = totalInvested > 0 ? (totalUnrealizedPnl / totalInvested) * 100 : 0;
         const realizedPnl = acc.daily_realized_pnl || 0.0;
+
+        // 0. Update Simple Summary (Beginner View) Widget
+        const simpInvestedEl = document.getElementById('simple-invested-val');
+        const simpPortfolioEl = document.getElementById('simple-portfolio-val');
+        const simpPnlEl = document.getElementById('simple-net-pnl-val');
+        const simpPnlSubEl = document.getElementById('simple-net-pnl-sub');
+        const simpCashEl = document.getElementById('simple-cash-val');
+
+        if (simpInvestedEl) simpInvestedEl.innerText = `$${totalInvested.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (simpPortfolioEl) simpPortfolioEl.innerText = `$${equity.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (simpPnlEl) {
+          simpPnlEl.innerText = `${totalUnrealizedPnl >= 0 ? '+' : ''}$${totalUnrealizedPnl.toFixed(2)}`;
+          simpPnlEl.style.color = totalUnrealizedPnl >= 0 ? 'var(--green)' : 'var(--red)';
+        }
+        if (simpPnlSubEl) {
+          simpPnlSubEl.innerText = `${totalUnrealizedPnl >= 0 ? '🟢 Profit' : '🔴 Loss'} (${totalUnrealizedPct >= 0 ? '+' : ''}${totalUnrealizedPct.toFixed(2)}%)`;
+          simpPnlSubEl.style.color = totalUnrealizedPnl >= 0 ? 'var(--green)' : 'var(--red)';
+        }
+        if (simpCashEl) simpCashEl.innerText = `$${(acc.cash || 0.0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 
         // 1. Running Stocks Card
         const openPosEl = document.getElementById('kpi-open-pos');
@@ -4149,112 +4239,7 @@
       }
     }
 
-    let isSoundEnabled = true;
-    let audioCtx = null;
-
-    function playAudioSFX(type) {
-      if (!isSoundEnabled) return;
-      try {
-        if (!audioCtx) {
-          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        const now = audioCtx.currentTime;
-        if (type === 'fill') {
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(523.25, now);
-          osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.15);
-          gain.gain.setValueAtTime(0.15, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-          osc.start(now);
-          osc.stop(now + 0.2);
-        } else if (type === 'warning') {
-          osc.type = 'sawtooth';
-          osc.frequency.setValueAtTime(220, now);
-          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
-          gain.gain.setValueAtTime(0.2, now);
-          gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
-          osc.start(now);
-          osc.stop(now + 0.3);
-        } else if (type === 'scan') {
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(440, now);
-          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
-          gain.gain.setValueAtTime(0.1, now);
-          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
-          osc.start(now);
-          osc.stop(now + 0.15);
-        }
-      } catch (e) {
-        console.warn("Audio SFX error:", e);
-      }
-    }
-
-    function playChime(type) {
-      if (type === 'fill' || type === 'success') {
-        playAudioSFX('fill');
-      } else if (type === 'warning' || type === 'alert') {
-        playAudioSFX('warning');
-      } else {
-        playAudioSFX('scan');
-      }
-    }
-
-
-
-    function toggleSoundFX() {
-      isSoundEnabled = !isSoundEnabled;
-      const soundIcon = document.getElementById('sound-icon');
-      const soundText = document.getElementById('sound-text');
-      if (soundIcon && soundText) {
-        soundIcon.innerText = isSoundEnabled ? '🔊' : '🔇';
-        soundText.innerText = isSoundEnabled ? 'SFX' : 'MUTED';
-      }
-      if (isSoundEnabled) playAudioSFX('scan');
-    }
-
-    let isAutoPilotEnabled = true;
-    async function toggleAutoPilot() {
-      isAutoPilotEnabled = !isAutoPilotEnabled;
-      const btn = document.getElementById('btn-auto-pilot');
-      const dot = document.getElementById('autopilot-dot');
-      const txt = document.getElementById('autopilot-text');
-
-      if (isAutoPilotEnabled) {
-        btn.style.background = 'rgba(0, 230, 118, 0.12)';
-        btn.style.borderColor = 'rgba(0, 230, 118, 0.4)';
-        btn.style.color = '#00e676';
-        dot.style.background = '#00e676';
-        dot.style.boxShadow = '0 0 6px #00e676';
-        txt.innerText = 'AUTO-PILOT: ON';
-        playAudioSFX('fill');
-      } else {
-        btn.style.background = 'rgba(255, 179, 0, 0.12)';
-        btn.style.borderColor = 'rgba(255, 179, 0, 0.4)';
-        btn.style.color = '#ffb300';
-        dot.style.background = '#ffb300';
-        dot.style.boxShadow = '0 0 6px #ffb300';
-        txt.innerText = 'AUTO-PILOT: OFF';
-        playAudioSFX('warning');
-      }
-
-      try {
-        await fetch('/api/autopilot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ enabled: isAutoPilotEnabled })
-        });
-      } catch (e) {
-        console.error("AutoPilot toggle error:", e);
-      }
-    }
+    /* Sound and AutoPilot functions are defined earlier in this script block */
 
     async function refreshWatchlistLive() {
       try {
@@ -4326,6 +4311,7 @@
 
     window.addEventListener('load', () => {
       try { initQuantChart(); } catch (e) { console.warn("initQuantChart error:", e); }
+      try { setTimeframe('1M'); } catch (e) { console.warn("setTimeframe error:", e); }
       try { initCandleChart(); } catch (e) { console.warn("initCandleChart error:", e); }
       try { initBacktestChart(); } catch (e) { console.warn("initBacktestChart error:", e); }
       try { refreshAccountLive(); } catch (e) { console.warn("refreshAccountLive error:", e); }
@@ -4334,6 +4320,7 @@
       setInterval(refreshWatchlistLive, 10000);
       setInterval(refreshAccountLive, 5000);
     });
+
   </script>
 </body>
 

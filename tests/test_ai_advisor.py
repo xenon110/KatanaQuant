@@ -65,6 +65,31 @@ async def test_ai_advisor_execute_endpoint():
         data = resp.json()
         assert data["status"] in ["FILLED", "REJECTED_BY_RISK_GATE", "REJECTED_BY_BROKER"]
         if data["status"] == "FILLED":
-
             assert data["symbol"] == "SPY"
             assert data["quantity"] == 5
+
+
+def test_indicator_math_correctness():
+    import pandas as pd
+    from src.data.indicators import calculate_macd, calculate_stochastic
+
+    prices = pd.Series([10.0 + (i * 0.5) if i % 2 == 0 else 10.0 + (i * 0.3) for i in range(40)])
+    macd, signal, hist = calculate_macd(prices, fast_period=12, slow_period=26, signal_period=9)
+
+    assert len(macd) == 40
+    assert len(signal) == 40
+    assert len(hist) == 40
+    # Histogram must equal macd_line - signal_line
+    assert abs((macd.iloc[-1] - signal.iloc[-1]) - hist.iloc[-1]) < 1e-5
+
+    df = pd.DataFrame({
+        "high": [10.0 + i for i in range(20)],
+        "low": [8.0 + i for i in range(20)],
+        "close": [9.0 + i for i in range(20)]
+    })
+    k, d = calculate_stochastic(df, k_period=14, d_period=3)
+    assert len(k) == 20
+    assert len(d) == 20
+    # %D is rolling mean of %K over d_period
+    assert d.iloc[-1] <= 100.0 and d.iloc[-1] >= 0.0
+

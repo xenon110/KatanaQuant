@@ -74,3 +74,37 @@ def calculate_vwap(df: pd.DataFrame) -> pd.Series:
     cum_pv = (typical_price * df['volume']).cumsum()
     cum_vol = df['volume'].cumsum()
     return cum_pv / cum_vol.replace(0, np.nan)
+
+
+def calculate_macd(
+    series: pd.Series, fast_period: int = 12, slow_period: int = 26, signal_period: int = 9
+) -> Tuple[pd.Series, pd.Series, pd.Series]:
+    """
+    Calculate MACD Line, Signal Line, and MACD Histogram.
+    Returns (macd_line, signal_line, histogram).
+    """
+    ema_fast = calculate_ema(series, fast_period)
+    ema_slow = calculate_ema(series, slow_period)
+    macd_line = ema_fast - ema_slow
+    signal_line = calculate_ema(macd_line, signal_period)
+    histogram = macd_line - signal_line
+    return macd_line.fillna(0.0), signal_line.fillna(0.0), histogram.fillna(0.0)
+
+
+def calculate_stochastic(
+    df: pd.DataFrame, k_period: int = 14, d_period: int = 3
+) -> Tuple[pd.Series, pd.Series]:
+    """
+    Calculate Stochastic Oscillator (%K, %D).
+    Expects DataFrame with columns ['high', 'low', 'close'].
+    Returns (%K, %D).
+    """
+    lowest_low = df['low'].rolling(window=k_period).min()
+    highest_high = df['high'].rolling(window=k_period).max()
+    rng = highest_high - lowest_low
+    rng = rng.replace(0, np.nan)
+    k = ((df['close'] - lowest_low) / rng) * 100.0
+    k = k.fillna(50.0)
+    d = k.rolling(window=d_period).mean().fillna(k)
+    return k, d
+

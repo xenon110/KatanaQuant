@@ -4028,17 +4028,23 @@
             `;
           } else {
             tbody.innerHTML = positions.map(p => {
-              const isLong = p.quantity >= 0;
-              const isProfit = p.unrealized_pnl >= 0;
+              const qty = Math.abs(p.quantity || 0);
+              const isLong = (p.quantity || 0) >= 0;
+              const avgPrice = p.avg_entry_price !== undefined && p.avg_entry_price !== null ? Number(p.avg_entry_price) : 0.0;
+              const curPrice = p.current_price !== undefined && p.current_price !== null ? Number(p.current_price) : avgPrice;
+              const unPnl = p.unrealized_pnl !== undefined && p.unrealized_pnl !== null ? Number(p.unrealized_pnl) : 0.0;
+              const unPnlPct = p.unrealized_pnl_pct !== undefined && p.unrealized_pnl_pct !== null ? Number(p.unrealized_pnl_pct) : 0.0;
+              const isProfit = unPnl >= 0;
+
               return `
                 <tr>
-                  <td class="sym-bold">${p.symbol}</td>
+                  <td class="sym-bold">${p.symbol || 'N/A'}</td>
                   <td><span class="badge-pos ${isLong ? 'badge-long' : 'badge-short'}">${isLong ? 'LONG' : 'SHORT'}</span></td>
-                  <td>${Math.abs(p.quantity)}</td>
-                  <td>$${p.avg_entry_price.toFixed(2)}</td>
-                  <td>$${p.current_price.toFixed(2)}</td>
-                  <td class="${isProfit ? 'text-green' : 'text-red'}">${isProfit ? '+' : ''}$${p.unrealized_pnl.toFixed(2)}</td>
-                  <td class="${isProfit ? 'text-green' : 'text-red'}">${isProfit ? '+' : ''}${(p.unrealized_pnl_pct * 100).toFixed(2)}%</td>
+                  <td>${qty}</td>
+                  <td>$${avgPrice.toFixed(2)}</td>
+                  <td>$${curPrice.toFixed(2)}</td>
+                  <td class="${isProfit ? 'text-green' : 'text-red'}">${isProfit ? '+' : ''}$${unPnl.toFixed(2)}</td>
+                  <td class="${isProfit ? 'text-green' : 'text-red'}">${isProfit ? '+' : ''}${(unPnlPct * 100).toFixed(2)}%</td>
                   <td>
                     <button onclick="closePosition('${p.symbol}')" style="background:#200d11; border:1px solid #4d181f; color:#ff4d5a; padding:2px 8px; border-radius:4px; font-family:var(--font-mono); font-size:10px; cursor:pointer; font-weight:700;">
                       CLOSE
@@ -4050,6 +4056,7 @@
           }
         }
 
+
         // Render P&L By Symbol box
         const pnlList = document.getElementById('pnl-by-symbol-list');
         if (pnlList) {
@@ -4057,11 +4064,13 @@
             pnlList.innerHTML = `<div style="color:var(--text-muted); font-size:11px;">No active open positions.</div>`;
           } else {
             pnlList.innerHTML = positions.map(p => {
-              const isProfit = p.unrealized_pnl >= 0;
-              return `<div style="display:flex; justify-content:space-between;"><span>${p.symbol}</span> <span class="${isProfit ? 'text-green' : 'text-red'}">${isProfit ? '+' : ''}$${p.unrealized_pnl.toFixed(2)}</span></div>`;
+              const unPnl = p.unrealized_pnl !== undefined && p.unrealized_pnl !== null ? Number(p.unrealized_pnl) : 0.0;
+              const isProfit = unPnl >= 0;
+              return `<div style="display:flex; justify-content:space-between;"><span>${p.symbol || 'N/A'}</span> <span class="${isProfit ? 'text-green' : 'text-red'}">${isProfit ? '+' : ''}$${unPnl.toFixed(2)}</span></div>`;
             }).join('');
           }
         }
+
 
         // Risk Limits Sidebar Updates
         const lossValEl = document.getElementById('risk-daily-loss-val');

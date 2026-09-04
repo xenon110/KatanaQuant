@@ -1828,16 +1828,9 @@
           </button>
         </div>
 
-        <div>
-          <button class="nav-tab" id="btn-auto-pilot" onclick="toggleAutoPilot()"
-            style="background: linear-gradient(135deg, #0b1a2e 0%, #071220 100%); color: #38bdf8; border: 1px solid #1f4373; box-shadow: 0 0 12px rgba(56, 189, 248, 0.2); font-weight: 800; padding: 7px 16px;">
-            <span id="auto-pilot-dot"
-              style="width:8px; height:8px; border-radius:50%; background:#64748b; display:inline-block;"></span>
-            <span id="auto-pilot-text">AUTO-PILOT: OFF</span>
-          </button>
-        </div>
       </div>
     </header>
+
 
     <!-- ====================================================
          TAB 1: QUANTFLOW DASHBOARD (Primary Execution View)
@@ -4196,8 +4189,15 @@
     }
 
     function playChime(type) {
-      playAudioSFX(type === 'success' ? 'fill' : type === 'alert' ? 'warning' : 'scan');
+      if (type === 'fill' || type === 'success') {
+        playAudioSFX('fill');
+      } else if (type === 'warning' || type === 'alert') {
+        playAudioSFX('warning');
+      } else {
+        playAudioSFX('scan');
+      }
     }
+
 
 
     function toggleSoundFX() {

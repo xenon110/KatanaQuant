@@ -63,7 +63,8 @@ async def test_ai_advisor_execute_endpoint():
         })
         assert resp.status_code == 200
         data = resp.json()
-        assert data["status"] in ["FILLED", "REJECTED_BY_RISK_GATE"]
+        assert data["status"] in ["FILLED", "REJECTED_BY_RISK_GATE", "REJECTED_BY_BROKER"]
         if data["status"] == "FILLED":
+
             assert data["symbol"] == "SPY"
             assert data["quantity"] == 5

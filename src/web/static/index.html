@@ -4,7 +4,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QUANTFLOW — Advanced Multi-Agent Trading System</title>
+  <title>KatanaQuant — Autonomous Multi-Agent Trading System</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -1746,8 +1747,8 @@
             </svg>
           </div>
           <div class="brand-text">
-            <h1>QUANTFLOW</h1>
-            <span>INSTITUTIONAL EXECUTION DESK</span>
+            <h1>KatanaQuant ⚔️</h1>
+            <span>INSTITUTIONAL MULTI-AGENT QUANT ENGINE</span>
           </div>
 
           <!-- Live Status Badge -->
@@ -1758,6 +1759,14 @@
         </div>
 
         <div class="header-controls">
+          <!-- Master Auto-Pilot Switch -->
+          <button id="btn-auto-pilot" onclick="toggleAutoPilot()"
+            style="background:rgba(0, 230, 118, 0.12); border:1px solid rgba(0, 230, 118, 0.4); color:#00e676; padding:6px 12px; border-radius:6px; font-family:var(--font-mono); font-size:11px; cursor:pointer; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow: 0 0 12px rgba(0, 230, 118, 0.2);"
+            title="Toggle Continuous Multi-Agent Auto-Pilot Trading">
+            <span id="autopilot-dot" style="width:8px; height:8px; border-radius:50%; background:#00e676; box-shadow:0 0 6px #00e676;"></span>
+            <span id="autopilot-text">AUTO-PILOT: ON</span>
+          </button>
+
           <!-- Theme Mode Switcher -->
           <button id="btn-theme-toggle" onclick="toggleThemeMode()"
             style="background:#0c1424; border:1px solid #1a2a47; color:#f1f5f9; padding:6px 11px; border-radius:6px; font-family:var(--font-mono); font-size:11px; cursor:pointer; font-weight:700; display:flex; align-items:center; gap:5px;"
@@ -1771,6 +1780,7 @@
             title="Toggle Sound FX">
             <span id="sound-icon">🔊</span> <span id="sound-text">SFX</span>
           </button>
+
 
           <!-- CSV Export -->
           <button onclick="exportTradesCSV()"
@@ -4136,6 +4146,101 @@
       }
     }
 
+    let isSoundEnabled = true;
+    let audioCtx = null;
+
+    function playAudioSFX(type) {
+      if (!isSoundEnabled) return;
+      try {
+        if (!audioCtx) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        if (type === 'fill') {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(523.25, now);
+          osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.15);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+          osc.start(now);
+          osc.stop(now + 0.2);
+        } else if (type === 'warning') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        } else if (type === 'scan') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      } catch (e) {
+        console.warn("Audio SFX error:", e);
+      }
+    }
+
+    function toggleSoundFX() {
+      isSoundEnabled = !isSoundEnabled;
+      const soundIcon = document.getElementById('sound-icon');
+      const soundText = document.getElementById('sound-text');
+      if (soundIcon && soundText) {
+        soundIcon.innerText = isSoundEnabled ? '🔊' : '🔇';
+        soundText.innerText = isSoundEnabled ? 'SFX' : 'MUTED';
+      }
+      if (isSoundEnabled) playAudioSFX('scan');
+    }
+
+    let isAutoPilotEnabled = true;
+    async function toggleAutoPilot() {
+      isAutoPilotEnabled = !isAutoPilotEnabled;
+      const btn = document.getElementById('btn-auto-pilot');
+      const dot = document.getElementById('autopilot-dot');
+      const txt = document.getElementById('autopilot-text');
+
+      if (isAutoPilotEnabled) {
+        btn.style.background = 'rgba(0, 230, 118, 0.12)';
+        btn.style.borderColor = 'rgba(0, 230, 118, 0.4)';
+        btn.style.color = '#00e676';
+        dot.style.background = '#00e676';
+        dot.style.boxShadow = '0 0 6px #00e676';
+        txt.innerText = 'AUTO-PILOT: ON';
+        playAudioSFX('fill');
+      } else {
+        btn.style.background = 'rgba(255, 179, 0, 0.12)';
+        btn.style.borderColor = 'rgba(255, 179, 0, 0.4)';
+        btn.style.color = '#ffb300';
+        dot.style.background = '#ffb300';
+        dot.style.boxShadow = '0 0 6px #ffb300';
+        txt.innerText = 'AUTO-PILOT: OFF';
+        playAudioSFX('warning');
+      }
+
+      try {
+        await fetch('/api/autopilot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled: isAutoPilotEnabled })
+        });
+      } catch (e) {
+        console.error("AutoPilot toggle error:", e);
+      }
+    }
+
     async function refreshWatchlistLive() {
       try {
         const res = await fetch('/api/watchlist');
@@ -4153,6 +4258,7 @@
       }
     }
 
+
     function setupWebSocket() {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
@@ -4164,7 +4270,9 @@
           }
 
           if (msg.type === 'AI_TRADE_FILLED' || (msg.type === 'BAR_PROCESSED' && msg.trade)) {
+            playAudioSFX('fill');
             const container = document.getElementById('exec-log-container');
+
             if (container) {
               const sym = msg.symbol;
               const side = msg.side || (msg.trade ? msg.trade.side : 'BUY');

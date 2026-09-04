@@ -107,6 +107,7 @@ class SystemState:
             on_phase_change_callback=self.on_phase_change,
             alpaca_trading_client=alpaca_trading_client
         )
+        self.autopilot_enabled = True
 
     async def on_auto_event(self, event: Dict[str, Any]):
         """Broadcasts autonomous buy/sell execution events to WebSockets & event log."""
@@ -115,6 +116,8 @@ class SystemState:
 
     async def on_live_stream_bar(self, bar: MarketBar):
         """Callback invoked when real-time bar arrives from Alpaca WebSocket stream."""
+        if not self.autopilot_enabled:
+            return
         self.bar_cache.add_bar(bar)
         df = self.bar_cache.get_dataframe(bar.symbol)
         raw_acc = await self.broker.get_account()
@@ -149,8 +152,12 @@ class SystemState:
 
     async def on_scheduled_cycle(self):
         """Callback executed on each scheduled market cycle."""
+        if not self.autopilot_enabled:
+            logger.debug("Auto-pilot disabled. Skipping scheduled cycle.")
+            return
         logger.debug("Executing autonomous market schedule cycle...")
         await self.auto_trader.execute_autonomous_cycle()
+
 
     async def on_phase_change(self, phase: MarketPhase):
         """Callback executed when market transitions between PRE_MARKET, REGULAR, POST_MARKET, CLOSED."""
@@ -245,6 +252,27 @@ async def toggle_kill_switch(req: KillSwitchRequest):
     }
     await manager.broadcast(event_payload)
     return {"status": "success", "tripped": state.risk_gate.is_circuit_breaker_tripped}
+
+
+class AutoPilotRequest(BaseModel):
+    enabled: bool
+
+
+@app.get("/api/autopilot")
+async def get_autopilot_status():
+    return {"autopilot_enabled": state.autopilot_enabled}
+
+
+@app.post("/api/autopilot")
+async def set_autopilot_status(req: AutoPilotRequest):
+    state.autopilot_enabled = req.enabled
+    await manager.broadcast({
+        "type": "AUTOPILOT_CHANGE",
+        "enabled": state.autopilot_enabled,
+        "timestamp": datetime.now().isoformat()
+    })
+    return {"status": "success", "autopilot_enabled": state.autopilot_enabled}
+
 
 
 @app.post("/api/simulate-step")
@@ -536,21 +564,26 @@ async def execute_ai_advisor_trade(req: AIExecuteTradeRequest):
     )
 
     if decision.approved and decision.allowed_quantity > 0:
-        if hasattr(state.broker, 'submit_bracket_order') and req.take_profit and req.stop_loss:
-            try:
-                order = await state.broker.submit_bracket_order(
-                    symbol=req.symbol.upper(),
-                    quantity=decision.allowed_quantity,
-                    side=side_enum,
-                    take_profit_price=req.take_profit,
-                    stop_loss_price=req.stop_loss,
-                    decision=decision
-                )
-            except Exception as e:
-                logger.warning(f"Bracket submission fallback to market: {e}")
+        try:
+            if hasattr(state.broker, 'submit_bracket_order') and req.take_profit and req.stop_loss:
+                try:
+                    order = await state.broker.submit_bracket_order(
+                        symbol=req.symbol.upper(),
+                        quantity=decision.allowed_quantity,
+                        side=side_enum,
+                        take_profit_price=req.take_profit,
+                        stop_loss_price=req.stop_loss,
+                        decision=decision
+                    )
+                except Exception as e:
+                    logger.warning(f"Bracket submission fallback to market: {e}")
+                    order = await state.broker.submit_order(trade, decision)
+            else:
                 order = await state.broker.submit_order(trade, decision)
-        else:
-            order = await state.broker.submit_order(trade, decision)
+        except Exception as e:
+            logger.error(f"AI Advisor execution broker error: {e}")
+            return {"status": "REJECTED_BY_BROKER", "reason": str(e)}
+
 
         state.reconciler.record_trade_fill(
             symbol=req.symbol.upper(),

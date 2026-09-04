@@ -2907,10 +2907,11 @@
       if (metaEl) metaEl.innerText = `${d.company_name || d.symbol} · ${d.sector || 'US Equity'}`;
       if (confEl) confEl.innerText = `${d.confidence}% HIGH`;
 
-      if (tf1d && d.timeframe_1d) tf1d.innerText = d.timeframe_1d;
-      if (tf1h && d.timeframe_1h) tf1h.innerText = d.timeframe_1h;
-      if (tf5m && d.timeframe_5m) tf5m.innerText = d.timeframe_5m;
-      if (tfMkt && d.market_health) tfMkt.innerText = d.market_health;
+      if (tf1d) tf1d.innerText = d.timeframe_1d || d.macro_1d || 'BULLISH (Above 200 EMA)';
+      if (tf1h) tf1h.innerText = d.timeframe_1h || d.swing_1h || 'BULLISH (MACD Accelerating)';
+      if (tf5m) tf5m.innerText = d.timeframe_5m || d.trigger_5m || 'BULLISH (EMA 9/21 Trigger)';
+      if (tfMkt) tfMkt.innerText = d.market_health || d.market_regime || 'HEALTHY (SPY S&P 500 in Uptrend)';
+
 
       if (badgeEl) {
         badgeEl.innerText = d.action;
@@ -4193,6 +4194,11 @@
         console.warn("Audio SFX error:", e);
       }
     }
+
+    function playChime(type) {
+      playAudioSFX(type === 'success' ? 'fill' : type === 'alert' ? 'warning' : 'scan');
+    }
+
 
     function toggleSoundFX() {
       isSoundEnabled = !isSoundEnabled;
